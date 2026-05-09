@@ -1,70 +1,72 @@
 import os
+import torch
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 import config
 
 
 def get_loaders():
-    """
-    Создает загрузчики данных для обучения, валидации и финального тестирования.
-    """
-
-    # 1. Трансформации для тренировочной выборки (с аугментацией)
+    # 1. Аугментация (как мы обсуждали ранее)
     train_transforms = transforms.Compose([
         transforms.Resize((224, 224)),
-        transforms.RandomRotation(15),  # Случайный поворот
-        transforms.RandomHorizontalFlip(),  # Отражение по горизонтали
+        transforms.RandomRotation(20),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.9, 1.1)),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
         transforms.ToTensor(),
-        # Стандартная нормализация для ImageNet (подходит и для ResNet)
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    # 2. Трансформации для валидации и теста (только изменение размера и нормализация)
     val_test_transforms = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    # 3. Создание объектов Dataset
-    # Пути берутся из твоего config.py (например, DATA_PATH = './dataset/cropped')
-    train_dataset = datasets.ImageFolder(
-        os.path.join(config.DATA_PATH, 'train'),
-        transform=train_transforms
-    )
-    valid_dataset = datasets.ImageFolder(
-        os.path.join(config.DATA_PATH, 'valid'),
-        transform=val_test_transforms
-    )
-    test_dataset = datasets.ImageFolder(
-        os.path.join(config.DATA_PATH, 'test'),
-        transform=val_test_transforms
+    # 2. Загрузка датасетов
+    train_dataset = datasets.ImageFolder(os.path.join(config.DATA_PATH, 'train'), train_transforms)
+    valid_dataset = datasets.ImageFolder(os.path.join(config.DATA_PATH, 'valid'), val_test_transforms)
+    test_dataset = datasets.ImageFolder(os.path.join(config.DATA_PATH, 'test'), val_test_transforms)
+
+    # --- ЛОГИКА БАЛАНСИРОВКИ (SAMPLER) ---
+
+    # Получаем метки всех картинок в трейне [0, 0, 1, 3, 0, ...]
+    targets = torch.tensor(train_dataset.targets)
+
+    # Считаем количество примеров в каждом классе
+    class_sample_count = torch.tensor(
+        [(targets == t).sum() for t in torch.unique(targets, sorted=True)]
     )
 
-    # 4. Параметры для DataLoader
-    # num_workers=4 задействует 4 потока процессора для подготовки фото
-    # pin_memory=True ускоряет перенос данных в видеопамять
+    # Вес класса = 1 / количество_примеров
+    weight = 1. / class_sample_count.float()
+
+    # Присваиваем вес каждой конкретной картинке в датасете
+    samples_weight = torch.tensor([weight[t] for t in targets])
+
+    # Создаем самплер. num_samples равен длине датасета,
+    # чтобы за одну эпоху мы прошли столько же итераций, сколько и раньше.
+    sampler = WeightedRandomSampler(
+        weights=samples_weight,
+        num_samples=len(samples_weight),
+        replacement=True
+    )
+
+    # 3. DataLoader
     loader_args = {
         'batch_size': config.BATCH_SIZE,
-        'num_workers': 4,
+        'num_workers': 2,
         'pin_memory': True,
-        'persistent_workers': True  # Оставляет воркеры активными между эпохами
+        'persistent_workers': True
     }
 
-    # 5. Создание DataLoader
-    train_loader = DataLoader(train_dataset, shuffle=True, **loader_args)
-    valid_loader = DataLoader(valid_dataset, shuffle=False, **loader_args)
-    test_loader = DataLoader(test_dataset, shuffle=False, **loader_args)
+    # ВАЖНО: shuffle=True НЕЛЬЗЯ использовать вместе с sampler
+    train_l = DataLoader(train_dataset, sampler=sampler, **loader_args)
 
-    # Вывод информации о классах для проверки
-    print(f"Найдено классов: {len(train_dataset.classes)} ({train_dataset.classes})")
-    print(f"Размер выборок: Train={len(train_dataset)}, Valid={len(valid_dataset)}, Test={len(test_dataset)}")
+    valid_l = DataLoader(valid_dataset, shuffle=False, **loader_args)
+    test_l = DataLoader(test_dataset, shuffle=False, **loader_args)
 
-    return train_loader, valid_loader, test_loader
+    print(f"Классы: {train_dataset.classes}")
+    print(f"Распределение в трейне: {class_sample_count.tolist()}")
 
-
-if __name__ == "__main__":
-    # Короткий тест: проверяем, что всё грузится
-    tr, val, ts = get_loaders()
-    images, labels = next(iter(tr))
-    print(f"Формат батча: {images.shape}")  # Должно быть [batch_size, 3, 224, 224]
+    return train_l, valid_l, test_l
