@@ -1,0 +1,35 @@
+Классы: ['backpack', 'book', 'chair', 'sofa', 'table', 'vase']
+Распределение в трейне: [1187, 3328, 5182, 779, 2045, 877]
+Успешно загружены веса: resnet18_feature_extraction.pth
+Обучаемых параметров: 11,179,590 (вся сеть разморожена)
+Начинаю дообучение (10 эпох)...
+Epoch [1/10] - Time: 32.3s - Loss: 0.8328 - Val Acc: 68.22%
+Epoch [2/10] - Time: 20.5s - Loss: 0.7323 - Val Acc: 71.63%
+Epoch [3/10] - Time: 19.8s - Loss: 0.6520 - Val Acc: 73.94%
+Epoch [4/10] - Time: 19.3s - Loss: 0.5934 - Val Acc: 76.03%
+Epoch [5/10] - Time: 19.1s - Loss: 0.5606 - Val Acc: 75.81%
+Epoch [6/10] - Time: 18.9s - Loss: 0.5199 - Val Acc: 77.05%
+Epoch [7/10] - Time: 18.9s - Loss: 0.4837 - Val Acc: 77.93%
+Epoch [8/10] - Time: 19.0s - Loss: 0.4475 - Val Acc: 76.39%
+Epoch [9/10] - Time: 19.4s - Loss: 0.4390 - Val Acc: 78.48%
+Epoch [10/10] - Time: 19.3s - Loss: 0.4123 - Val Acc: 78.26%
+
+Fine-tuning завершен!
+
+==============================
+ИТОГОВЫЕ МЕТРИКИ (TEST SET)
+==============================
+              precision    recall  f1-score   support
+
+    backpack       0.82      0.78      0.80       245
+        book       0.90      0.89      0.89       622
+       chair       0.78      0.82      0.80      1031
+        sofa       0.68      0.63      0.65       155
+       table       0.75      0.70      0.73       431
+        vase       0.78      0.84      0.81       180
+
+    accuracy                           0.80      2664
+   macro avg       0.78      0.78      0.78      2664
+weighted avg       0.80      0.80      0.80      2664
+
+Финальная модель сохранена как resnet18_fine_tuned.pth
