@@ -1,0 +1,39 @@
+C:\Users\Сергей\AppData\Local\Programs\Python\Python311\python.exe C:\Users\Сергей\Desktop\полезное\учеба\матстат\lab4\defreeze\fine-tuning.py
+--- Запуск FINE-TUNING на cuda ---
+Классы: ['backpack', 'book', 'chair', 'sofa', 'table', 'vase']
+Распределение в трейне: [1187, 3328, 5182, 779, 2045, 877]
+Успешно загружены веса: resnet18_feature_extraction.pth
+Обучаемых параметров: 11,179,590 (вся сеть разморожена)
+Начинаю дообучение (10 эпох)...
+Epoch [1/10] - Time: 30.3s - Loss: 0.8690 - Val Acc: 68.37%
+Epoch [2/10] - Time: 19.3s - Loss: 0.7760 - Val Acc: 69.90%
+Epoch [3/10] - Time: 19.4s - Loss: 0.7219 - Val Acc: 70.12%
+Epoch [4/10] - Time: 19.0s - Loss: 0.6899 - Val Acc: 73.28%
+Epoch [5/10] - Time: 19.4s - Loss: 0.6643 - Val Acc: 73.20%
+Epoch [6/10] - Time: 19.0s - Loss: 0.6374 - Val Acc: 74.52%
+Epoch [7/10] - Time: 19.2s - Loss: 0.5865 - Val Acc: 74.30%
+Epoch [8/10] - Time: 19.2s - Loss: 0.5606 - Val Acc: 75.26%
+Epoch [9/10] - Time: 19.0s - Loss: 0.5323 - Val Acc: 75.29%
+Epoch [10/10] - Time: 19.2s - Loss: 0.5377 - Val Acc: 75.73%
+
+Fine-tuning завершен!
+
+==============================
+ИТОГОВЫЕ МЕТРИКИ (TEST SET)
+==============================
+              precision    recall  f1-score   support
+
+    backpack       0.68      0.81      0.74       245
+        book       0.86      0.86      0.86       622
+       chair       0.78      0.74      0.76      1031
+        sofa       0.58      0.68      0.63       155
+       table       0.74      0.70      0.72       431
+        vase       0.81      0.81      0.81       180
+
+    accuracy                           0.77      2664
+   macro avg       0.74      0.77      0.75      2664
+weighted avg       0.77      0.77      0.77      2664
+
+Финальная модель сохранена как resnet18_fine_tuned.pth
+
+Process finished with exit code 0
